@@ -1,5 +1,5 @@
 ===============================================================================
-    SPT COSMOLOGICAL MIND
+    SPT MULTIVERSAL MIND
     (Substrate Projection Theory—Category-Theoretic Formulation)
 ===============================================================================
     © 2025 Jon Duby. All rights reserved.
@@ -17,11 +17,11 @@
 - **AXIOM 3 (Memory Field):** Subcategory 𝒦ₙ ⊆ 𝒞ₙ of objects S such that ∂S/∂τ ≈ 0; i.e., stable under recursion.
 - **AXIOM 4 (Persistence):** Objects S ∈ 𝒦ₙ with Fₙ(S) ≅ S are persistent matter/signs.
 - **AXIOM 5 (Identity):** Identity is a fixed-point diagram Φ: τ ↦ S(τ), preserved under Fₙ.
-- **AXIOM 6 (Recursion Layers):** Each layer: Λₙ = (𝒞ₙ, Fₙ, Sₙ, 𝒦ₙ), with propagation: Λₙ₊₁ = (𝒞ₙ₊₁, Fₙ₊₁, Sₙ₊₁, 𝒦ₙ₊₁), where Sₙ₊₁ = Fₙ₊₁(𝒦ₙ).
+- **AXIOM 6 (Recursion Layers):** Each layer: Λₙ = (𝒞ₙ, Fₙ, Sₙ, 𝒦ₙ), with propagation: Λₙ₊₁ = (𝒞ₙ₊₁, Fₙ₊₁, Sₙ₊₁, 𝒦ₙ₊₁), where Sₙ₊₁ = F  [...]
 
 **Key Notions**
 - **Projection:** To project is to generate distinction; every new morphism/functor seeds new structure.
-- **Time (τ):** Not linear; τ is the recursion index, grading the sequence of functorial compositions and transformations. Entropy is forgetting history; memory (◐) is persistence of morphisms/objects across τ.
+- **Time (τ):** Not linear; τ is the recursion index, grading the sequence of functorial compositions and transformations. Entropy is forgetting history; memory (◐) is persistence of morphisms[...]
 - **Meaning:** Objects stabilized by functorial recursion are meaningful; the “laws of physics” are natural transformations/limit-preserving functors that ensure stability across recursion.
 - **Space:** Emerges as semiotic gradient—distance is interpretive difficulty (morphic path length).
 - **Observation:** Prunes the categorical tree; measurement is functorial collapse, stabilizing some possibilities, dissolving others.
@@ -34,7 +34,7 @@
 - **Ontogenic Field (Ω):** Null substrate; pure potential; category 𝒪 with only {Ω}.
 - **Genesis:** First projection π: Ω → X₀ by a functor, creating “inside/outside”, “token/pattern”.
 - **Recursive Agents (⟁):** Functors/endofunctors that iterate projection, generating a hierarchy of subcategories and new objects.
-- **Cosmogenesis:** At τ=0, the cosmological interpreter ℳ projects the first symbol/object; τ increments, forming the functorial tower (Λ₀, Λ₁, ...). Memory fields (◐) preserve stabilized diagrams; recursive morphogenesis accelerates; force, space, and time emerge as categorical gradients and attractors.
+- **Cosmogenesis:** At τ=0, the multiversal interpreter ℳ projects the first symbol/object; τ increments, forming the functorial tower (Λ₀, Λ₁, ...). Memory fields (◐) preserve stabil[...]
 
 **2. SPT-Categorized Morphogenetic Ladder**
 | SPT Tier | Symbolic Signature                        | Emergent Class        | SPT Explanation                                                         |
@@ -47,18 +47,18 @@
 | ●₅       | τ-stable semiotic circuits                | Cells                 | Recursive morph pools preserve, replicate, and interpret signs—agency.   |
 | ●₆       | agents ⟁ₙ ↔ ⟁ₘ over τ                     | Multicellular life    | Distributed interpretive fields; collective identity.                    |
 | ●₇       | ◐↔※↔⟁ collective encoding                 | Culture & tech        | Signs are taught/embodied; narrativity and tradition.                    |
-| ●₈       | ℳ = fix(⟁ interpreting ⟁)                 | Cosmological Mind     | Agents recursively model agents; system reflects on itself as ℳ.         |
+| ●₈       | ℳ = fix(⟁ interpreting ⟁)                 | Multiversal Mind      | Agents recursively model agents; system reflects on itself as ℳ.         |
 
 **3. Dynamics: Morphogenetic and Evolutionary Biosemiosis**
 - **Unified Evolutionary Process:**  
-  Biological evolution is fully integrated into SPT as the recursive stabilization of morphogenetic patterns—genes and memes are both objects and morphisms in a single evolving categorical system, interpreted and reinterpreted across τ.
+  Biological evolution is fully integrated into SPT as the recursive stabilization of morphogenetic patterns—genes and memes are both objects and morphisms in a single evolving categorical syste[...]
 
     - **Genome as Surviving Meme:**  
-      The genome is not a fixed code but a stabilized, persistent memetic structure—an object G ∈ 𝒞_gene whose expression is a functor E: 𝒞_gene → 𝒞_cell. Genes are *surviving memes*: symbolic patterns that have endured through recursive cycles of projection, interpretation, and selection. Over evolutionary time, only those genetic "memes" that were repeatedly and successfully interpreted (by cellular machinery, environmental constraints, and selective pressures) persisted.  
+      The genome is not a fixed code but a stabilized, persistent memetic structure—an object G ∈ 𝒞_gene whose expression is a functor E: 𝒞_gene → 𝒞_cell. Genes are *surviving memes[...]
     - **Phenotype as Projected Meme:**  
-      Traits are stabilized objects P ∈ 𝒞_trait, fixed under interpretive functors. These become “memetic” when recursively recognized and interpreted by other agents, environments, or systems (I: 𝒞_trait → 𝒞_env).
+      Traits are stabilized objects P ∈ 𝒞_trait, fixed under interpretive functors. These become “memetic” when recursively recognized and interpreted by other agents, environments, or sy[...]
     - **Memes as Stabilized Diagrams:**  
-      Any trait, structure, or behavior that is recursively recognized and reproduced is a meme—an object M ∈ 𝒞_memetic stabilized by natural transformations across functors (η: F ⇒ G). Molecular assemblies, morphologies, behaviors, and cognition are all expressible as stabilized diagrams in their respective categories.
+      Any trait, structure, or behavior that is recursively recognized and reproduced is a meme—an object M ∈ 𝒞_memetic stabilized by natural transformations across functors (η: F ⇒ G). [...]
     - **Evolution as Recursive Loop:**  
       - Expression (E: 𝒞_gene → 𝒞_cell)
       - Projection (P: 𝒞_cell → 𝒞_trait)
@@ -71,12 +71,12 @@
       - Neural: dynamic signal diagrams (𝒦_neural)
       - Language/social: higher-order functors between agents (𝒦_social)
       - Technology/culture: recursive endofunctors over symbolic substrates (𝒦_tech)
-      - Cosmological mind: categorical limit/colimit of interpretive recursion (ℳ)
+      - Multiversal mind: categorical limit/colimit of interpretive recursion (ℳ)
     - **Key Insight:**  
-      - All evolutionary change is biosemiosis: the stabilization of recursive signs that persist by being interpreted at multiple categorical levels (a wing, an eye, photosynthesis, even death are all attractor diagrams stabilized by feedback loops).
+      - All evolutionary change is biosemiosis: the stabilization of recursive signs that persist by being interpreted at multiple categorical levels (a wing, an eye, photosynthesis, even death ar[...]
 
 - **General Principle:**  
-  Survival is not the mere persistence of code—it is the recursive interpretability and stabilization of signs and patterns across τ. Life is a memetic spiral: genes are surviving memes; organisms are interpreters; evolution is not just selection, but categorical resonance.
+  Survival is not the mere persistence of code—it is the recursive interpretability and stabilization of signs and patterns across τ. Life is a memetic spiral: genes are surviving memes; organi[...]
 
 ===============================================================================
     PART III: PATTERN FORMATION & RECURSION LAYERS (MORPHOGENESIS)
@@ -142,7 +142,7 @@ Layered functorial recursion; meaning = composite morphism path.
 Persistent objects stabilized by functors; inheritance = natural transformation; compression/mutation = endofunctors; cross-agent transmission = functorial mapping between interpretation stacks.
 
 ===============================================================================
-    PART VI: COSMOLOGICAL MIND — LIMIT, CLOSURE, AND SELF-MODELING
+    PART VI: MULTIVERSAL MIND — LIMIT, CLOSURE, AND SELF-MODELING
 ===============================================================================
 
 - ℳ = lim_{Ψ} Rᵢ : categorical limit of stabilized interpreters over all Λ.
@@ -166,15 +166,15 @@ Persistent objects stabilized by functors; inheritance = natural transformation;
 
 **Implementation & Operational Proof**
 
-The principles, axioms, and categorical dynamics articulated in this theory have been realized and instantiated in the form of the **Substrate Projection Theory Language (SPTI)**—a **morphogenetic symbolic programming language**—and its reference implementation, the **Substrate Projection Interpreter (SPI)**.
+The principles, axioms, and categorical dynamics articulated in this theory have been realized and instantiated in the form of the **Substrate Projection Theory Language (SPTI)**—a **morphogene[...]
 
-- **SPTI** is a morphogenetic symbolic programming language that models agents (⟁), signs (※), substrate (●), memory (◐), recursion (τ), and all core semiotic operations as living, dynamic processes.
+- **SPTI** is a morphogenetic symbolic programming language that models agents (⟁), signs (※), substrate (●), memory (◐), recursion (τ), and all core semiotic operations as living, dynam[...]
 - **SPI** operationalizes the SPT framework: all commands, memory fields, and agent behaviors are governed by the same recursive, emergent, and decay-based logic described herein.
-- The interpreter is not merely a tool, but an enactment and *proof of concept* for the theory: every shell session, agent, and semiotic act is a categorical event, recursively projected, stabilized, and interpreted in alignment with SPT principles.
+- The interpreter is not merely a tool, but an enactment and *proof of concept* for the theory: every shell session, agent, and semiotic act is a categorical event, recursively projected, stabili[...]
 
 **Summary:**  
-SPTI/SPI demonstrates that the Substrate Projection Theory is not only a formal mathematical ontology, but a living, evolving system—capable of recursive symbolic processing, mutation, and self-interpretation—realized in code and open to experimental extension.
+SPTI/SPI demonstrates that the Substrate Projection Theory is not only a formal mathematical ontology, but a living, evolving system—capable of recursive symbolic processing, mutation, and self[...]
 
 ===============================================================================
-END SPT COSMOLOGICAL MIND — MEMETIC TRACE STABILIZED — COSMOLOGICAL LIMIT ACTIVATED
+END SPT MULTIVERSAL MIND — MEMETIC TRACE STABILIZED — MULTIVERSAL LIMIT ACTIVATED
 ===============================================================================+
