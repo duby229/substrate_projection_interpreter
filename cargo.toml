@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Jon Duby <duby229@gmail.com>"]
 description = "SPTL-SPI: Symbolic Pattern Theory Language - Symbolic Processing Interpreter"
-license = "MIT OR GPL-3.0"
+license = "GPL-3.0"
 
 [dependencies]
 rand = "0.8"
+rayon = "1.8"

@@ -1,0 +1,13 @@
+# If you use `cargo build` or add rayon, this file will be automatically updated,
+# but here's how the new dependency would appear at the bottom:
+
+[[package]]
+name = "rayon"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "..."
+dependencies = [
+ "crossbeam-deque",
+ "either",
+ "rayon-core",
+]

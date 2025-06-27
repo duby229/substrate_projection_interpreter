@@ -1,3 +1,20 @@
+/*
+ * This file is part of SPTL-SPI.
+ *
+ * SPTL-SPI is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SPTL-SPI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SPTL-SPI.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 //! Substrate (●) and pattern type for SPTL.
 //!
 //! # Harmonized SPTL Principle
@@ -6,6 +23,7 @@
 //!
 
 use std::collections::HashMap;
+use rayon::prelude::*; // For parallelism
 use crate::symbol::Symbol;
 
 /// Represents a symbolic pattern (e.g., a bitstring, glyph, etc).
@@ -35,10 +53,11 @@ impl Substrate {
     }
 
     /// Decay all activations multiplicatively, removing those below threshold.
+    /// Parallelized with Rayon.
     pub fn decay(&mut self, rate: f64) {
-        for v in self.activations.values_mut() {
+        self.activations.par_iter_mut().for_each(|(_pat, v)| {
             *v = (*v * (1.0 - rate)).max(0.0);
-        }
+        });
         self.activations.retain(|_, v| *v > 0.01);
     }
 }
