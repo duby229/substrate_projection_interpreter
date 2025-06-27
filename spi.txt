@@ -1,0 +1,1277 @@
+cargo.toml \\
+[package]
+name = "sptl-spi"
+version = "0.1.0"
+edition = "2021"
+authors = ["Jon Duby <duby229@gmail.com>"]
+description = "SPTL-SPI: Symbolic Pattern Theory Language - Symbolic Processing Interpreter"
+license = "MIT OR GPL-3.0"
+
+[dependencies]
+rand = "0.8"
+
+.gitignore \\
+target/
+*.rs.bk
+*.log
+.DS_Store
+*.tmp
+
+src/visualize.rs \\
+pub fn print_vector(name: &str, vec: &[f64]) {
+    let body = vec.iter().map(|v| format!("{:.2}", v)).collect::<Vec<_>>().join(", ");
+    println!("{} = [{}]", name, body);
+}
+
+src/variables.rs \\
+//! Symbolic variable support for SPTL shell.
+
+use std::collections::HashMap;
+
+#[derive(Clone)]
+pub enum SymbolicValue {
+    Symbol { token: String, pattern: String },
+    Pattern(String),
+    Token(String),
+    // Extend as needed
+}
+
+#[derive(Default)]
+pub struct VariableTable {
+    table: HashMap<String, SymbolicValue>,
+}
+
+impl VariableTable {
+    pub fn new() -> Self {
+        Self { table: HashMap::new() }
+    }
+
+    pub fn set(&mut self, name: &str, value: SymbolicValue) {
+        self.table.insert(name.to_string(), value);
+    }
+
+    pub fn get(&self, name: &str) -> Option<&SymbolicValue> {
+        self.table.get(name)
+    }
+}
+
+src/trace.rs \\
+use crate::substrate::Substrate;
+use crate::interpretation::Interpretation;
+
+pub fn trace_distance(a: &Substrate, b: &Interpretation) -> f64 {
+    a.state.iter()
+        .zip(&b.data)
+        .map(|(x, y)| (x - y).powi(2))
+        .sum::<f64>()
+        .sqrt()
+}
+
+pub fn coherence(a: &[f64], b: &[f64]) -> f64 {
+    let dot = a.iter().zip(b).map(|(x, y)| x * y).sum::<f64>();
+    let mag_a = a.iter().map(|x| x * x).sum::<f64>().sqrt();
+    let mag_b = b.iter().map(|x| x * x).sum::<f64>().sqrt();
+    if mag_a == 0.0 || mag_b == 0.0 {
+        0.0
+    } else {
+        dot / (mag_a * mag_b)
+    }
+}
+
+src/symbol.rs \\
+//! Symbol/sign (※) and meaning module for SPTL.
+//!
+//! # Harmonized SPTL Principle
+//!
+//! - **Sign (※):** Not statically defined, but whatever an agent expresses and stabilizes through τ-indexed cycles. A sign is validated by participating in the say → project → interpret loop and persisting through tick.
+//! - **Meaning:** Created by interpretation at a specific τ. Meaning is always situated in process and recursively re-enacted.
+//!
+//! See SPTL-Specification-Harmonization.md for more.
+
+use crate::substrate::Pattern;
+
+/// A symbolic sign: a token and a pattern.
+/// Signs are not static; their identity emerges from cycles of expression, projection, and interpretation.
+/// If it participates in the say → project → interpret loop and survives tick, it is a sign.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Symbol {
+    /// The sign's token (e.g. word, name, identifier).
+    pub token: String,
+    /// The associated pattern.
+    pub pattern: Pattern,
+}
+
+impl Symbol {
+    /// Construct a new symbol (token, pattern pair).
+    pub fn new(token: &str, pattern: Pattern) -> Self {
+        Symbol {
+            token: token.to_string(),
+            pattern,
+        }
+    }
+
+    /// Return a mutated version of the symbol (e.g. for drift/inheritance).
+    pub fn mutate(&self) -> Symbol {
+        let mutated = format!("{}*", self.token);
+        Symbol::new(&mutated, self.pattern.clone())
+    }
+}
+
+/// A meaning is an interpretation of a symbol at a recursion index (tau).
+/// Meaning is always situated in τ; it only exists as an interpretive event.
+#[derive(Debug, Clone)]
+pub struct Meaning {
+    /// The sign/symbol being interpreted.
+    pub sign: Symbol,
+    /// The recursion/time index at which this meaning was created.
+    pub tau: usize,
+    /// Human-readable description of the meaning.
+    pub description: String,
+}
+
+impl Meaning {
+    /// Create a new meaning from a symbol and recursion index.
+    pub fn from_symbol(symbol: &Symbol, tau: usize) -> Self {
+        Meaning {
+            sign: symbol.clone(),
+            tau,
+            description: format!("Interpretation of '{}' at τ={}", symbol.token, tau),
+        }
+    }
+}
+
+src/substrate.rs \\
+//! Substrate (●) and pattern type for SPTL.
+//!
+//! # Harmonized SPTL Principle
+//!
+//! - **Substrate (●):** A field of activations that are always decaying, always available for projection and resonance. If it can be activated and decayed, it is substrate.
+//!
+
+use std::collections::HashMap;
+use crate::symbol::Symbol;
+
+/// Represents a symbolic pattern (e.g., a bitstring, glyph, etc).
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Pattern(pub String);
+
+impl Pattern {
+    /// Construct a new pattern from a string.
+    pub fn new(s: &str) -> Self {
+        Pattern(s.to_string())
+    }
+}
+
+/// The substrate (●) is a field of activations for patterns.
+/// It is always in flux: activations rise upon projection and decay over τ.
+#[derive(Debug, Default)]
+pub struct Substrate {
+    /// Activation level for each pattern present in the substrate.
+    pub activations: HashMap<Pattern, f64>,
+}
+
+impl Substrate {
+    /// Project a symbol into the substrate, increasing its activation.
+    pub fn project(&mut self, symbol: &Symbol) {
+        let ent = self.activations.entry(symbol.pattern.clone()).or_insert(0.0);
+        *ent += 1.0;
+    }
+
+    /// Decay all activations multiplicatively, removing those below threshold.
+    pub fn decay(&mut self, rate: f64) {
+        for v in self.activations.values_mut() {
+            *v = (*v * (1.0 - rate)).max(0.0);
+        }
+        self.activations.retain(|_, v| *v > 0.01);
+    }
+}
+
+src/slm.sptl \\
+# SPTL Symbolic Language Model — Evolution Script Example
+# This script enacts the phased SLM evolution process in the SPTL interactive shell format.
+# Each command matches shell syntax as described in src/shell.rs and the SLM evolution plan.
+
+# -------- PHASE 1: Foundational Architecture --------
+
+# Create primary agent with high memory, low coherence
+agent create slm 128 0.25
+
+# Seed basic lexicon
+say slm origin 101010
+say slm echo 110011
+say slm drift 011110
+
+# Project each sign into substrate and tick to enforce decay dynamics
+project slm origin
+project slm echo
+project slm drift
+tick
+show agent slm
+show substrate
+
+# -------- PHASE 2: Recursion, Mutation & Feedback Loops --------
+
+# Mutate high-stability symbols and express them
+say slm origin* 101010
+say slm echo* 110011
+say slm drift* 011110
+
+# Project mutated signs and interpret them
+project slm origin*
+project slm echo*
+project slm drift*
+interpret slm origin*
+interpret slm echo*
+interpret slm drift*
+tick
+show agent slm
+
+# -------- PHASE 3: Meaning Formation & Interpretation Conditioning --------
+
+# Further interpret all current signs, reinforcing memory and building interpretant history
+interpret slm origin
+interpret slm echo
+interpret slm drift
+interpret slm origin*
+interpret slm echo*
+interpret slm drift*
+tick
+show agent slm
+
+# -------- PHASE 4: Emergent Grammar & Dialogic Training --------
+
+# Create a second agent for symbolic dialogue
+agent create echo 64 0.2
+say echo listen 001100
+
+# Project signs from slm agent and interpret with echo agent
+project slm echo
+interpret echo echo
+
+# Start dialogic mutation/response between agents
+say slm echo** 110011
+project slm echo**
+interpret echo echo**
+
+say echo reply 011001
+project echo reply
+interpret slm reply
+tick
+
+show agent slm
+show agent echo
+
+# -------- PHASE 5: Metainterpretation & Reflective Abstraction --------
+
+# Add meta-introspective and self-referential signs
+say slm self 111111
+say slm tau 000001
+say slm remember 010101
+say slm trace 100100
+
+# Feed back interpretant as a new sign (example: summary or axiom)
+interpret slm origin
+say slm origin_trace 101010
+
+say slm axiom1 "origin* and echo* persist longest"
+say slm summary "Most persistent: origin, echo. Most mutated: drift*"
+project slm summary
+interpret slm summary
+
+# Observe final agent state and substrate
+show agent slm
+show substrate
+
+# END OF SCRIPT
+
+src/shell.rs \\
+mod narrative;
+
+fn handle_run_script(&mut self, script: &str) {
+    use narrative::{parser, runner};
+    let blocks = parser::parse_script(script);
+    let mut ctx = runner::ScriptContext::default();
+    runner::execute_script(&blocks, &mut ctx);
+}
+
+src/projection.rs \\
+use crate::substrate::Substrate;
+use crate::interpretation::Interpretation;
+use rand::Rng;
+
+pub fn project(
+    substrate: &mut Substrate,
+    interpretation: &Interpretation,
+    alpha: f64,
+    noise: f64,
+) {
+    let mut rng = rand::thread_rng();
+    for (s, i) in substrate.state.iter_mut().zip(&interpretation.data) {
+        let n = rng.gen_range(-noise..=noise);
+        *s = (1.0 - alpha) * *s + alpha * (*i + n);
+    }
+}
+
+src/patterns.rs \\
+//! Pattern abstraction support for SPTL shell.
+
+use std::collections::HashMap;
+
+/// Manages named patterns for symbolic reuse.
+#[derive(Default)]
+pub struct PatternTable {
+    table: HashMap<String, String>,
+}
+
+impl PatternTable {
+    pub fn new() -> Self {
+        Self {
+            table: HashMap::new(),
+        }
+    }
+
+    /// Define or update a named pattern.
+    pub fn define(&mut self, name: &str, value: &str) {
+        self.table.insert(name.to_string(), value.to_string());
+    }
+
+    /// Expand pattern references in the input string.
+    /// Replaces any [name] with its pattern definition.
+    pub fn expand_patterns<'a>(&'a self, text: &'a str) -> String {
+        let mut out = String::new();
+        let mut chars = text.chars().peekable();
+        while let Some(c) = chars.next() {
+            if c == '[' {
+                let mut name = String::new();
+                while let Some(&n) = chars.peek() {
+                    if n == ']' {
+                        chars.next();
+                        break;
+                    }
+                    name.push(n);
+                    chars.next();
+                }
+                if let Some(val) = self.table.get(&name) {
+                    out.push_str(val);
+                } else {
+                    out.push('[');
+                    out.push_str(&name);
+                    out.push(']');
+                }
+            } else {
+                out.push(c);
+            }
+        }
+        out
+    }
+}
+
+src/main.rs \\
+mod shell;
+mod agents;
+mod substrate;
+mod symbol;
+
+fn main() {
+    let mut shell = shell::Shell::new();
+    shell.run();
+}
+
+src/macros.rs //
+! Macro support for SPTL shell.
+
+use std::collections::HashMap;
+
+pub struct Macro {
+    pub params: Vec<String>,
+    pub body: String,
+}
+
+#[derive(Default)]
+pub struct MacroTable {
+    table: HashMap<String, Macro>,
+}
+
+impl MacroTable {
+    pub fn new() -> Self {
+        Self { table: HashMap::new() }
+    }
+
+    pub fn define(&mut self, name: &str, params: Vec<String>, body: String) {
+        self.table.insert(name.to_string(), Macro { params, body });
+    }
+
+    pub fn get(&self, name: &str) -> Option<&Macro> {
+        self.table.get(name)
+    }
+}
+
+src/interpretations.rs \\
+#[derive(Clone)]
+pub struct Interpretation {
+    pub data: Vec<f64>,
+}
+
+impl Interpretation {
+    pub fn new(data: Vec<f64>) -> Self {
+        Interpretation { data }
+    }
+}
+
+sr/config.rs \\
+pub struct Config {
+    pub alpha: f64,
+    pub noise: f64,
+    pub steps: usize,
+}
+
+src/agents.rs \\
+//! Agents (⟁), memory field (◐), and recursive interpretation (Πₙ) module.
+//! 
+//! # Harmonized SPTL Principle
+//! 
+//! - **Agent (⟁):** Not merely a static data structure, but a *recursive semiotic attractor*—an entity whose identity and persistence are produced by its ongoing cycles of sign expression, projection, interpretation, and memory decay. If it recursively stabilizes and mutates signs, it is an agent.
+//! - **Memory (◐):** Not a fixed store, but a dynamic field of traces always at risk of decay, always subject to reinforcement. Memory is whatever persists through feedback and interpretive cycles.
+//! - **Interpretation (Π):** The act of making meaning, situated within the τ-indexed context; reinforces and potentially mutates the memory field.
+//! 
+//! See SPTL-Specification-Harmonization.md for more on behavioral ontology.
+
+use std::collections::{HashMap, VecDeque};
+use crate::substrate::{Substrate, Pattern};
+use crate::symbol::{Symbol, Meaning};
+
+/// Represents a memory trace for a symbol, with stability and interpretants.
+/// A memory trace is not static: its stability emerges through feedback cycles.
+#[derive(Debug, Clone)]
+pub struct MemoryTrace {
+    /// The symbol this trace refers to.
+    pub symbol: Symbol,
+    /// The recursion/time index when it was created.
+    pub tau_index: usize,
+    /// Stability [0,1] of the trace.
+    pub stability: f64,
+    /// All meanings/interpretations of the symbol for this trace.
+    pub interpretants: Vec<Meaning>,
+}
+
+impl MemoryTrace {
+    /// Reinforces the trace, increasing stability.
+    pub fn reinforce(&mut self, delta: f64) {
+        self.stability = (self.stability + delta).clamp(0.0, 1.0);
+    }
+    /// Decays the trace, decreasing stability.
+    pub fn decay(&mut self, rate: f64) {
+        self.stability = (self.stability - rate).max(0.0);
+    }
+}
+
+/// MemoryField stores a queue of memory traces for an agent.
+/// Memory is always dynamic, subject to decay and feedback.
+#[derive(Debug, Default)]
+pub struct MemoryField {
+    /// The traces currently stored.
+    pub traces: VecDeque<MemoryTrace>,
+    /// Maximum number of traces to store.
+    pub max_traces: usize,
+}
+
+impl MemoryField {
+    /// Admit a new trace if stability ≥ eta, evicting oldest if at capacity.
+    pub fn admit(&mut self, trace: MemoryTrace, eta: f64) {
+        if trace.stability >= eta {
+            if self.traces.len() >= self.max_traces {
+                self.traces.pop_front();
+            }
+            self.traces.push_back(trace);
+        }
+    }
+    /// Reinforce stability for a matching symbol.
+    pub fn reinforce_symbol(&mut self, symbol: &Symbol, delta: f64) {
+        for t in &mut self.traces {
+            if &t.symbol == symbol {
+                t.reinforce(delta);
+            }
+        }
+    }
+    /// Decay all traces, removing those below threshold.
+    pub fn decay_all(&mut self, rate: f64) {
+        for t in &mut self.traces {
+            t.decay(rate);
+        }
+        self.traces.retain(|t| t.stability > 0.0);
+    }
+    /// Find a trace by symbol.
+    pub fn find(&self, symbol: &Symbol) -> Option<&MemoryTrace> {
+        self.traces.iter().find(|t| &t.symbol == symbol)
+    }
+}
+
+/// Symbolic agent (⟁): owns memory, a sign table, and core parameters.
+/// Agents are recursive processes: their identity is enacted through cycles of sign expression, projection, and interpretation.
+/// See SPTL-Specification-Harmonization.md for principle: "If it recursively stabilizes and mutates signs, it is an agent."
+#[derive(Debug)]
+pub struct Agent {
+    /// Agent identifier.
+    pub id: String,
+    /// All known symbols (token → pattern).
+    pub symbol_table: HashMap<String, Pattern>,
+    /// Agent's memory field.
+    pub memory: MemoryField,
+    /// Minimum stability required for memory admission.
+    pub coherence_threshold: f64,
+}
+
+impl Agent {
+    /// Construct a new agent with given memory and coherence.
+    pub fn new(id: impl Into<String>, max_memory: usize, coherence_threshold: f64) -> Self {
+        Agent {
+            id: id.into(),
+            symbol_table: HashMap::new(),
+            memory: MemoryField {
+                traces: VecDeque::with_capacity(max_memory),
+                max_traces: max_memory,
+            },
+            coherence_threshold,
+        }
+    }
+
+    /// Express a symbol (token, pattern), adding a trace if stable.
+    /// In SPTL, expression is an act that can recursively reinforce or mutate the system.
+    pub fn express_symbol(&mut self, token: &str, pattern: Pattern, tau: usize) -> Symbol {
+        let symbol = Symbol::new(token, pattern.clone());
+        self.symbol_table.insert(token.to_string(), pattern);
+        let trace = MemoryTrace {
+            symbol: symbol.clone(),
+            tau_index: tau,
+            stability: 1.0,
+            interpretants: Vec::new(),
+        };
+        self.memory.admit(trace, self.coherence_threshold);
+        symbol
+    }
+
+    /// Project a symbol into the substrate.
+    pub fn project_symbol(&self, symbol: &Symbol, substrate: &mut Substrate) {
+        substrate.project(symbol);
+    }
+
+    /// Attempt to interpret a symbol, reinforcing memory if successful.
+    pub fn interpret_symbol(&mut self, symbol: &Symbol, tau: usize) -> Option<Meaning> {
+        if let Some(pattern) = self.symbol_table.get(&symbol.token) {
+            if pattern == &symbol.pattern {
+                self.memory.reinforce_symbol(symbol, 0.1);
+                let meaning = Meaning::from_symbol(symbol, tau);
+                if let Some(trace) = self.memory.traces.iter_mut().find(|t| &t.symbol == symbol) {
+                    trace.interpretants.push(meaning.clone());
+                }
+                return Some(meaning);
+            }
+        }
+        None
+    }
+
+    /// Return a mutated version of the symbol.
+    pub fn mutate_symbol(&self, symbol: &Symbol) -> Symbol {
+        symbol.mutate()
+    }
+
+    /// Decay all memory traces.
+    pub fn decay_memory(&mut self, rate: f64) {
+        self.memory.decay_all(rate);
+    }
+}
+
+src/sptl/mod.rs \\
+use std::collections::HashMap;
+use crate::substrate::Substrate;
+use crate::interpretation::Interpretation;
+use crate::projection::project;
+use crate::trace::{trace_distance, coherence};
+use crate::visualize::print_vector;
+
+#[derive(Debug)]
+pub enum Statement {
+    Field { name: String, size: usize },
+    Interpretation { name: String, values: Vec<f64> },
+    Project {
+        target: String,
+        interp: String,
+        alpha: f64,
+        noise: f64,
+        steps: usize,
+    },
+    TraceDistance { name: String, field: String, interp: String },
+    Meaning { name: String, trace_cmp: String, threshold: f64 },
+    NarrateReturn { tokens: Vec<String> },
+    LogCoherence(String),
+    LogMeaning(String),
+    ExpressSymbol { token: String, into_field: String },
+    Modulate { token: String, intensity: f64 },
+}
+
+pub struct Tokenizer<'a> {
+    input: &'a str,
+}
+
+impl<'a> Tokenizer<'a> {
+    pub fn new(input: &'a str) -> Self {
+        Tokenizer { input }
+    }
+
+    pub fn tokenize(&mut self) -> Vec<String> {
+        self.input
+            .split_whitespace()
+            .map(|s| s.trim_matches(&['"', ',', '[', ']'][..]).to_string())
+            .collect()
+    }
+}pub struct Parser {
+    tokens: Vec<String>,
+    cursor: usize,
+}
+
+impl Parser {
+    pub fn new(tokens: Vec<String>) -> Self {
+        Parser { tokens, cursor: 0 }
+    }
+
+    pub fn parse(&mut self) -> Vec<Statement> {
+        let mut statements = Vec::new();
+        while self.cursor < self.tokens.len() {
+            if let Some(stmt) = self.parse_statement() {
+                statements.push(stmt);
+            } else {
+                break;
+            }
+        }
+        statements
+    }
+
+    fn parse_statement(&mut self) -> Option<Statement> {
+        let t = self.next()?.to_lowercase();
+        match t.as_str() {
+            "field" => {
+                let name = self.next()?;
+                let size = self.next()?.parse().ok()?;
+                Some(Statement::Field { name, size })
+            }
+            "interpretation" => {
+                let name = self.next()?;
+                self.expect("=")?;
+                self.expect("[")?;
+                let mut values = Vec::new();
+                while let Some(tok) = self.peek() {
+                    if tok == "]" {
+                        self.next();
+                        break;
+                    }
+                    if let Ok(num) = tok.parse::<f64>() {
+                        values.push(num);
+                        self.next();
+                    } else {
+                        break;
+                    }
+                }
+                Some(Statement::Interpretation { name, values })
+            }
+            "project" => {
+                let target = self.next()?;
+                self.expect("<-")?;
+                let interp = self.next()?;
+                self.expect("{")?;
+                let alpha = self.expect_value("alpha:")?;
+                let noise = self.expect_value("noise:")?;
+                let steps = self.expect_value("steps:")? as usize;
+                self.expect("}")?;
+                Some(Statement::Project {
+                    target,
+                    interp,
+                    alpha,
+                    noise,
+                    steps,
+                })
+            }
+            "trace" => {
+                let name = self.next()?;
+                self.expect("=")?;
+                let func = self.next()?;
+                self.expect("(")?;
+                let field = self.next()?;
+                self.expect(",")?;
+                let interp = self.next()?;
+                self.expect(")")?;
+                Some(Statement::TraceDistance {
+                    name,
+                    field,
+                    interp,
+                })
+            }
+            "meaning" => {
+                let name = self.next()?;
+                self.expect("=")?;
+                let func = self.next()?;
+                self.expect("(")?;
+                let trace_cmp = self.next()?;
+                self.expect(",")?;
+                let threshold = self.next()?.parse().ok()?;
+                self.expect(")")?;
+                Some(Statement::Meaning {
+                    name,
+                    trace_cmp,
+                    threshold,
+                })
+            }
+            "narratereturn" => {
+                let mut tokens = Vec::new();
+                while let Some(tok) = self.peek() {
+                    if tok.starts_with('"') {
+                        tokens.push(tok.trim_matches('"').to_string());
+                        self.next();
+                    } else {
+                        break;
+                    }
+                }
+                Some(Statement::NarrateReturn { tokens })
+            }
+            "logcoherence" => {
+                let field = self.next()?;
+                Some(Statement::LogCoherence(field))
+            }
+            "logmeaning" => {
+                let name = self.next()?;
+                Some(Statement::LogMeaning(name))
+            }
+            "expresssymbol" => {
+                let token = self.next()?;
+                let _ = self.next()?; // into_field
+                let field = self.next()?;
+                Some(Statement::ExpressSymbol {
+                    token,
+                    into_field: field,
+                })
+            }
+            "modulate" => {
+                let token = self.next()?;
+                let _ = self.next()?; // intensity
+                let val = self.next()?.parse().ok()?;
+                Some(Statement::Modulate { token, intensity: val })
+            }
+            _ => None,
+        }
+    }
+
+    fn next(&mut self) -> Option<String> {
+        if self.cursor < self.tokens.len() {
+            let t = self.tokens[self.cursor].clone();
+            self.cursor += 1;
+            Some(t)
+        } else {
+            None
+        }
+    }
+
+    fn peek(&self) -> Option<&str> {
+        self.tokens.get(self.cursor).map(|s| s.as_str())
+    }
+
+    fn expect(&mut self, expected: &str) -> Option<()> {
+        let token = self.next()?;
+        if token.to_lowercase() == expected.to_lowercase() {
+            Some(())
+        } else {
+            None
+        }
+    }
+
+    fn expect_value(&mut self, label: &str) -> Option<f64> {
+        let l = self.next()?;
+        if !l.starts_with(label) {
+            return None;
+        }
+        let val = self.next()?.parse().ok()?;
+        Some(val)
+    }
+}
+pub fn execute_program(program: Vec<Statement>) {
+    let mut fields: HashMap<String, Substrate> = HashMap::new();
+    let mut interps: HashMap<String, Interpretation> = HashMap::new();
+
+    for stmt in program {
+        match stmt {
+            Statement::Field { name, size } => {
+                fields.insert(name, Substrate::new(size));
+            }
+            Statement::Interpretation { name, values } => {
+                interps.insert(name, Interpretation::new(values));
+            }
+            Statement::Project {
+                target,
+                interp,
+                alpha,
+                noise,
+                steps,
+            } => {
+                if let (Some(field), Some(interp_val)) =
+                    (fields.get_mut(&target), interps.get(&interp))
+                {
+                    for _ in 0..steps {
+                        project(field, interp_val, alpha, noise);
+                    }
+                } else {
+                    eprintln!("⚠️ Unknown field or interpretation in Project");
+                }
+            }
+            Statement::TraceDistance {
+                name,
+                field,
+                interp,
+            } => {
+                if let (Some(f), Some(i)) = (fields.get(&field), interps.get(&interp)) {
+                    let result = trace_distance(f, i);
+                    println!("Trace {} = {:.4}", name, result);
+                } else {
+                    eprintln!("⚠️ Unknown field or interpretation in TraceDistance");
+                }
+            }
+            Statement::Meaning {
+                name,
+                trace_cmp,
+                threshold,
+            } => {
+                println!("💡 Meaning {} ← {} < {}", name, trace_cmp, threshold);
+            }
+            Statement::NarrateReturn { tokens } => {
+                println!("🗣 {}", tokens.join(" "));
+            }
+            Statement::LogCoherence(name) => {
+                if let Some(f) = fields.get(&name) {
+                    print_vector(&format!("Ψ[{}]", name), &f.state);
+                } else {
+                    eprintln!("⚠️ Unknown field in LogCoherence");
+                }
+            }
+            Statement::LogMeaning(name) => {
+                println!("🧠 Meaning declared: {}", name);
+            }
+            Statement::ExpressSymbol {
+                token,
+                into_field,
+            } => {
+                println!("➕ Expressed {} into {}", token, into_field);
+            }
+            Statement::Modulate { token, intensity } => {
+                println!("🎛 Modulated {} @ {:.2}", token, intensity);
+            }
+        }
+    }
+}
+
+src/narrative/runner.rs \\
+//! Runner for SPTL narrative DSL with macros
+
+use super::ast::{Block, Action};
+use std::collections::HashMap;
+
+#[derive(Default)]
+pub struct ScriptContext {
+    pub vars: HashMap<String, String>,
+    pub macros: HashMap<String, (Vec<String>, Vec<Action>)>,
+    pub agents: HashMap<String, AgentState>,
+    pub tau: u64,
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct AgentState {
+    pub memory: Vec<String>,
+    pub activation: HashMap<String, f32>,
+}
+
+pub fn execute_script(blocks: &[Block], ctx: &mut ScriptContext) {
+    // First pass: register macros
+    for block in blocks {
+        if let Block::MacroDef { name, params, body } = block {
+            ctx.macros.insert(name.clone(), (params.clone(), body.clone()));
+        }
+    }
+    // Second pass: execute non-macro blocks
+    for block in blocks {
+        match block {
+            Block::MacroDef { .. } => {},
+            _ => execute_block(block, ctx),
+        }
+    }
+}
+
+fn execute_block(block: &Block, ctx: &mut ScriptContext) {
+    match block {
+        Block::AtTau(tau, actions) => {
+            ctx.tau = *tau;
+            println!("--- at τ={} ---", tau);
+            for action in actions {
+                execute_action(action, ctx);
+            }
+        }
+        Block::Repeat(n, actions) => {
+            for i in 0..*n {
+                println!("Repeat iteration {}/{}", i + 1, n);
+                for action in actions {
+                    execute_action(action, ctx);
+                }
+            }
+        }
+        Block::While(cond, actions) => {
+            let mut count = 0;
+            while eval_condition(cond, ctx) {
+                println!("While iteration {}", count + 1);
+                for action in actions {
+                    execute_action(action, ctx);
+                }
+                count += 1;
+                if count > 1000 {
+                    println!("Breaking infinite while loop: more than 1000 iterations.");
+                    break;
+                }
+            }
+        }
+        Block::Parallel(actions) => {
+            println!("-- Parallel block --");
+            for action in actions {
+                execute_action(action, ctx);
+            }
+        }
+        Block::MacroDef { .. } => {}
+    }
+}
+
+fn execute_action(action: &Action, ctx: &mut ScriptContext) {
+    match action {
+        Action::Conditional(cond, subactions) => {
+            if eval_condition(cond, ctx) {
+                println!("Condition '{}' passed.", cond);
+                for sub in subactions {
+                    execute_action(sub, ctx);
+                }
+            } else {
+                println!("Condition '{}' failed.", cond);
+            }
+        }
+        Action::CreateAgent { name, mem, coh } => {
+            println!("Create agent {} mem={} coh={}", name, mem, coh);
+            ctx.agents.insert(name.clone(), AgentState::default());
+        }
+        Action::VariableAssignment { name, value } => {
+            let val = expand_vars(value, ctx);
+            println!("Set variable {} = {}", name, val);
+            ctx.vars.insert(name.clone(), val);
+        }
+        Action::Say { agent, token, pattern } => {
+            let token = expand_vars(token, ctx);
+            let pattern = expand_vars(pattern, ctx);
+            println!("{} says: {} → {}", agent, token, pattern);
+            ctx.agents.entry(agent.clone()).or_default().memory.push(token.clone());
+        }
+        Action::Interpret { agent, token } => {
+            let token = expand_vars(token, ctx);
+            println!("{} interprets: {}", agent, token);
+            ctx.agents.entry(agent.clone()).or_default().memory.push(token.clone());
+        }
+        Action::Project { agent, token } => {
+            let token = expand_vars(token, ctx);
+            println!("{} projects: {}", agent, token);
+        }
+        Action::Tick(n) => {
+            println!("Advance τ by {}", n);
+            ctx.tau += *n as u64;
+        }
+        Action::Assert(expr) => {
+            println!("Assert: {}", expr);
+        }
+        Action::Comment(text) => {
+            println!("# {}", text);
+        }
+        Action::MacroCall { name, args } => {
+            if let Some((params, body)) = ctx.macros.get(name) {
+                if params.len() != args.len() {
+                    println!("Macro {} expects {} arguments, got {}", name, params.len(), args.len());
+                    return;
+                }
+                let old_vars = ctx.vars.clone();
+                for (p, a) in params.iter().zip(args.iter()) {
+                    ctx.vars.insert(p.clone(), expand_vars(a, ctx));
+                }
+                for act in body {
+                    execute_action(act, ctx);
+                }
+                ctx.vars = old_vars;
+            } else {
+                println!("Macro '{}' not found.", name);
+            }
+        }
+    }
+}
+
+fn eval_condition(cond: &str, ctx: &ScriptContext) -> bool {
+    if cond == "always" {
+        return true;
+    }
+    let tokens: Vec<&str> = cond.split_whitespace().collect();
+    if tokens.len() == 3 && tokens[1] == "knows" {
+        if let Some(agent) = ctx.agents.get(tokens[0]) {
+            return agent.memory.contains(&tokens[2].to_string());
+        }
+    }
+    if tokens.len() == 3 && tokens[1] == "memory" && tokens[2].starts_with("contains") {
+        let agent = tokens[0];
+        let item = cond.split("contains").nth(1).unwrap().trim();
+        if let Some(agent) = ctx.agents.get(agent) {
+            return agent.memory.contains(&item.to_string());
+        }
+    }
+    println!("Condition '{}' not recognized, default false.", cond);
+    false
+}
+
+fn expand_vars(text: &str, ctx: &ScriptContext) -> String {
+    let mut result = String::new();
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '$' {
+            let mut name = String::new();
+            while let Some(&n) = chars.peek() {
+                if !n.is_alphanumeric() && n != '_' { break; }
+                name.push(n);
+                chars.next();
+            }
+            if let Some(val) = ctx.vars.get(&name) {
+                result.push_str(val);
+            } else {
+                result.push('$');
+                result.push_str(&name);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
+}
+
+src/narrative/parser.rs \\
+//! Parser for SPTL narrative DSL with macro support
+
+use super::ast::{Block, Action};
+use std::collections::VecDeque;
+
+struct LineCursor<'a> {
+    lines: VecDeque<(usize, &'a str)>,
+}
+impl<'a> LineCursor<'a> {
+    fn from(script: &'a str) -> Self {
+        let mut lines = VecDeque::new();
+        for line in script.lines() {
+            let trimmed = line.trim_start();
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                continue;
+            }
+            let indent = line.len() - trimmed.len();
+            lines.push_back((indent, trimmed));
+        }
+        Self { lines }
+    }
+    fn peek(&self) -> Option<&(usize, &'a str)> {
+        self.lines.front()
+    }
+    fn next(&mut self) -> Option<(usize, &'a str)> {
+        self.lines.pop_front()
+    }
+}
+
+pub fn parse_script(script: &str) -> Vec<Block> {
+    let mut cursor = LineCursor::from(script);
+    let mut blocks = Vec::new();
+    while let Some((_, line)) = cursor.peek() {
+        if line.starts_with("macro ") {
+            blocks.push(parse_macro_def(&mut cursor));
+        } else if line.starts_with("at τ=") {
+            blocks.push(parse_at_tau(&mut cursor));
+        } else if line.starts_with("repeat ") {
+            blocks.push(parse_repeat(&mut cursor));
+        } else if line.starts_with("while ") {
+            blocks.push(parse_while(&mut cursor));
+        } else if line.starts_with("parallel:") {
+            blocks.push(parse_parallel(&mut cursor));
+        } else {
+            blocks.push(parse_at_tau(&mut cursor));
+        }
+    }
+    blocks
+}
+
+fn parse_macro_def(cursor: &mut LineCursor) -> Block {
+    let (base_indent, header) = cursor.next().unwrap();
+    let header = header.trim_start_matches("macro").trim();
+    let open_paren = header.find('(').unwrap();
+    let close_paren = header.find(')').unwrap();
+    let name = header[..open_paren].trim().to_string();
+    let params: Vec<String> = header[open_paren + 1..close_paren]
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    let mut body = Vec::new();
+    while let Some((indent, _)) = cursor.peek() {
+        if *indent <= base_indent {
+            break;
+        }
+        body.append(&mut parse_action_block(cursor, base_indent + 2));
+    }
+    Block::MacroDef { name, params, body }
+}
+
+fn parse_at_tau(cursor: &mut LineCursor) -> Block {
+    let (base_indent, header) = cursor.next().unwrap();
+    let tau: u64 = header.trim_start_matches("at τ=").split(':').next().unwrap().trim().parse().unwrap();
+    let mut actions = Vec::new();
+    while let Some((indent, _)) = cursor.peek() {
+        if *indent <= base_indent {
+            break;
+        }
+        actions.append(&mut parse_action_block(cursor, base_indent + 2));
+    }
+    Block::AtTau(tau, actions)
+}
+
+fn parse_repeat(cursor: &mut LineCursor) -> Block {
+    let (base_indent, header) = cursor.next().unwrap();
+    let n: u32 = header.trim_start_matches("repeat")
+        .split("times").next().unwrap().trim().parse().unwrap();
+    let mut actions = Vec::new();
+    while let Some((indent, _)) = cursor.peek() {
+        if *indent <= base_indent {
+            break;
+        }
+        actions.append(&mut parse_action_block(cursor, base_indent + 2));
+    }
+    Block::Repeat(n, actions)
+}
+
+fn parse_while(cursor: &mut LineCursor) -> Block {
+    let (base_indent, header) = cursor.next().unwrap();
+    let cond = header.trim_start_matches("while").trim_end_matches(':').trim().to_string();
+    let mut actions = Vec::new();
+    while let Some((indent, _)) = cursor.peek() {
+        if *indent <= base_indent {
+            break;
+        }
+        actions.append(&mut parse_action_block(cursor, base_indent + 2));
+    }
+    Block::While(cond, actions)
+}
+
+fn parse_parallel(cursor: &mut LineCursor) -> Block {
+    let (base_indent, _) = cursor.next().unwrap();
+    let mut actions = Vec::new();
+    while let Some((indent, _)) = cursor.peek() {
+        if *indent <= base_indent {
+            break;
+        }
+        actions.append(&mut parse_action_block(cursor, base_indent + 2));
+    }
+    Block::Parallel(actions)
+}
+
+fn parse_action_block(cursor: &mut LineCursor, min_indent: usize) -> Vec<Action> {
+    let (indent, line) = cursor.next().unwrap();
+    if line.starts_with("if ") && line.ends_with(':') {
+        let cond = line.trim_start_matches("if").trim_end_matches(':').trim().to_string();
+        let mut subactions = Vec::new();
+        while let Some((next_indent, _)) = cursor.peek() {
+            if *next_indent <= indent {
+                break;
+            }
+            subactions.append(&mut parse_action_block(cursor, indent + 2));
+        }
+        vec![Action::Conditional(cond, subactions)]
+    } else {
+        vec![parse_action(line)]
+    }
+}
+
+fn parse_action(line: &str) -> Action {
+    if let Some(rest) = line.strip_prefix("create agent ") {
+        let mut parts = rest.split_whitespace();
+        let name = parts.next().unwrap().to_string();
+        let mem: u32 = parts.next().unwrap().parse().unwrap();
+        let coh: f32 = parts.next().unwrap().parse().unwrap();
+        Action::CreateAgent { name, mem, coh }
+    } else if let Some(rest) = line.strip_prefix("let ") {
+        let (name, value) = rest.split_once('=').unwrap();
+        Action::VariableAssignment {
+            name: name.trim().to_string(),
+            value: value.trim().to_string(),
+        }
+    } else if let Some(rest) = line.strip_prefix("tick ") {
+        let n = rest.trim().parse().unwrap();
+        Action::Tick(n)
+    } else if let Some(rest) = line.strip_prefix("assert ") {
+        Action::Assert(rest.trim().to_string())
+    } else if let Some((agent, rest)) = line.split_once(" says: ") {
+        let (token, pattern) = rest.split_once(" → ").unwrap();
+        Action::Say {
+            agent: agent.trim().to_string(),
+            token: token.trim().to_string(),
+            pattern: pattern.trim().to_string(),
+        }
+    } else if let Some((agent, rest)) = line.split_once(" hears: ") {
+        let (token, _) = rest.split_once(" → ").unwrap();
+        Action::Interpret {
+            agent: agent.trim().to_string(),
+            token: token.trim().to_string(),
+        }
+    } else if let Some((agent, rest)) = line.split_once(" interprets: ") {
+        Action::Interpret {
+            agent: agent.trim().to_string(),
+            token: rest.trim().to_string(),
+        }
+    } else if line.contains('(') && line.ends_with(')') {
+        let open_paren = line.find('(').unwrap();
+        let close_paren = line.find(')').unwrap();
+        let name = line[..open_paren].trim().to_string();
+        let argstr = &line[open_paren + 1..close_paren];
+        let args: Vec<String> = argstr.split(',').map(|s| s.trim().to_string()).collect();
+        Action::MacroCall { name, args }
+    } else if line.starts_with('#') {
+        Action::Comment(line[1..].trim().to_string())
+    } else {
+        panic!("Unrecognized action: {}", line);
+    }
+}
+
+src/narrative/mod.rs \\
+pub mod ast;
+pub mod parser;
+pub mod runner;
+
+src/narrative/ast.rs \\
+//! AST for SPTL narrative DSL with macro support
+
+#[derive(Debug, Clone)]
+pub enum Block {
+    AtTau(u64, Vec<Action>),
+    Repeat(u32, Vec<Action>),
+    While(String, Vec<Action>),
+    Parallel(Vec<Action>),
+    MacroDef { name: String, params: Vec<String>, body: Vec<Action> },
+}
+
+#[derive(Debug, Clone)]
+pub enum Action {
+    Conditional(String, Vec<Action>),
+    CreateAgent { name: String, mem: u32, coh: f32 },
+    MacroCall { name: String, args: Vec<String> },
+    VariableAssignment { name: String, value: String },
+    Say { agent: String, token: String, pattern: String },
+    Interpret { agent: String, token: String },
+    Project { agent: String, token: String },
+    Tick(u32),
+    Assert(String),
+    Comment(String),
+}

@@ -1,0 +1,96 @@
+# SPTL Symbolic Language Model — Evolution Script Example
+# This script enacts the phased SLM evolution process in the SPTL interactive shell format.
+# Each command matches shell syntax as described in src/shell.rs and the SLM evolution plan.
+
+# -------- PHASE 1: Foundational Architecture --------
+
+# Create primary agent with high memory, low coherence
+agent create slm 128 0.25
+
+# Seed basic lexicon
+say slm origin 101010
+say slm echo 110011
+say slm drift 011110
+
+# Project each sign into substrate and tick to enforce decay dynamics
+project slm origin
+project slm echo
+project slm drift
+tick
+show agent slm
+show substrate
+
+# -------- PHASE 2: Recursion, Mutation & Feedback Loops --------
+
+# Mutate high-stability symbols and express them
+say slm origin* 101010
+say slm echo* 110011
+say slm drift* 011110
+
+# Project mutated signs and interpret them
+project slm origin*
+project slm echo*
+project slm drift*
+interpret slm origin*
+interpret slm echo*
+interpret slm drift*
+tick
+show agent slm
+
+# -------- PHASE 3: Meaning Formation & Interpretation Conditioning --------
+
+# Further interpret all current signs, reinforcing memory and building interpretant history
+interpret slm origin
+interpret slm echo
+interpret slm drift
+interpret slm origin*
+interpret slm echo*
+interpret slm drift*
+tick
+show agent slm
+
+# -------- PHASE 4: Emergent Grammar & Dialogic Training --------
+
+# Create a second agent for symbolic dialogue
+agent create echo 64 0.2
+say echo listen 001100
+
+# Project signs from slm agent and interpret with echo agent
+project slm echo
+interpret echo echo
+
+# Start dialogic mutation/response between agents
+say slm echo** 110011
+project slm echo**
+interpret echo echo**
+
+say echo reply 011001
+project echo reply
+interpret slm reply
+tick
+
+show agent slm
+show agent echo
+
+# -------- PHASE 5: Metainterpretation & Reflective Abstraction --------
+
+# Add meta-introspective and self-referential signs
+say slm self 111111
+say slm tau 000001
+say slm remember 010101
+say slm trace 100100
+
+# Feed back interpretant as a new sign (example: summary or axiom)
+interpret slm origin
+say slm origin_trace 101010
+
+say slm axiom1 "origin* and echo* persist longest"
+say slm summary "Most persistent: origin, echo. Most mutated: drift*"
+project slm summary
+interpret slm summary
+
+# Observe final agent state and substrate
+show agent slm
+show substrate
+
+# END OF SCRIPT

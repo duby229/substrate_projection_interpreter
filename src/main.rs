@@ -1,7 +1,9 @@
-//forece refresh
-
 mod shell;
+mod agents;
+mod substrate;
+mod symbol;
 
 fn main() {
-    shell::start_shell();
+    let mut shell = shell::Shell::new();
+    shell.run();
 }
